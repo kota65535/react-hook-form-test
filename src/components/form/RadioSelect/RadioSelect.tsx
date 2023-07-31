@@ -91,6 +91,7 @@ export const RadioSelect = <R extends FieldValues>(props: Props<R>) => {
                   />
                   <TextField
                     {...field}
+                    value={isFreeFormValue ? field.value : ''}
                     inputRef={inputRef}
                     onBlur={handleTextFieldBlur}
                     error={enableError && !!fieldState.error}
