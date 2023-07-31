@@ -2,6 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { Amplify } from '@aws-amplify/core';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import 'dayjs/locale/ja';
 
 const config = {
   Auth: {
@@ -22,6 +25,8 @@ Amplify.configure(config);
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <App />
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'ja'} dateFormats={{ monthAndYear: 'YYYY年MM月' }}>
+      <App />
+    </LocalizationProvider>
   </React.StrictMode>
 );

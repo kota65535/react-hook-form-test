@@ -38,7 +38,7 @@ export const CheckboxSelect = <R extends FieldValues>(props: Props<R>) => {
 
         return (
           <FormControl disabled={!!props.disabled} fullWidth error={fieldState.invalid}>
-            {props.choices.map((c, i) => {
+            {props.choices.map((c) => {
               let value, label: string;
               if (c.constructor.name === 'String') {
                 value = label = c as string;

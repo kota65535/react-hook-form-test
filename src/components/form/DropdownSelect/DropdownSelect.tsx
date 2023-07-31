@@ -1,8 +1,9 @@
 import { FormControl, FormHelperText, InputLabel, MenuItem, Select } from '@mui/material';
 import { Controller, FieldPath, FieldValues, UseFormReturn } from 'react-hook-form';
+import { ReactElement } from 'react';
 
 type LabeledValue = {
-  label: string;
+  label: string | ReactElement;
   value: string;
 };
 
@@ -27,7 +28,7 @@ export const DropdownSelect = <R extends FieldValues>(props: Props<R>) => {
             <InputLabel id={props.name}>{props.label}</InputLabel>
             <Select labelId={props.name} label={props.label} autoWidth {...field} value={value}>
               {props.choices.map((c) => {
-                let value, label: string;
+                let value, label;
                 if (c.constructor.name === 'String') {
                   value = label = c as string;
                 } else {

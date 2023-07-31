@@ -1,1 +1,1 @@
-export { MultiFileSelect } from './MultiFileSelect.tsx';
+export { MultiFileSelect } from './MultiFileSelect';

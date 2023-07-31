@@ -2,11 +2,15 @@ import { Box, Button, FormHelperText, CircularProgress } from '@mui/material';
 import FileIcon from '@mui/icons-material/InsertDriveFile';
 import { FieldValues, UseFormReturn, FieldPath } from 'react-hook-form';
 import { FileCard } from '@/components/common';
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, ReactNode, useState } from 'react';
 
 interface Props<R extends FieldValues> {
   form: UseFormReturn<R>;
   name: FieldPath<R>;
+  text?: string;
+  icon?: ReactNode;
+  accept?: string;
+  baseUrl?: string;
   upload: (file: File) => Promise<string>;
 }
 
@@ -27,13 +31,13 @@ export const FileSelect = <R extends FieldValues>(props: Props<R>) => {
       return;
     }
     setUploading(true);
-    let url = '';
+    let pathOrUrl = '';
     try {
-      url = await props.upload(file);
+      pathOrUrl = await props.upload(file);
     } finally {
       setUploading(false);
     }
-    setValue(props.name, url as never, { shouldValidate: true });
+    setValue(props.name, pathOrUrl as never, { shouldValidate: true });
   };
   const onDelete = () => {
     setValue(props.name, '' as never, { shouldValidate: true });
@@ -45,14 +49,14 @@ export const FileSelect = <R extends FieldValues>(props: Props<R>) => {
         <Button
           component="label"
           disabled={uploading}
-          startIcon={uploading ? <CircularProgress size={20} /> : <FileIcon />}
+          startIcon={uploading ? <CircularProgress size={20} /> : props.icon ?? <FileIcon />}
         >
-          Select
-          <input onChange={onChange} accept="*/*" type="file" hidden />
+          {props.text ?? '選択'}
+          <input onChange={onChange} accept={props.accept ?? '*/*'} type="file" hidden />
         </Button>
         <input {...register(props.name)} accept="*/*" hidden />
       </Box>
-      {formValue && <FileCard url={formValue} onClick={onDelete} />}
+      {formValue && <FileCard url={props.baseUrl ? `${props.baseUrl}/${formValue}` : formValue} onClick={onDelete} />}
       <FormHelperText error={props.name in errors}>{errors[props.name]?.message as never}</FormHelperText>
     </Box>
   );

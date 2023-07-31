@@ -5,6 +5,9 @@ import * as yup from 'yup';
 import { CheckboxSelect, DropdownSelect, FileSelect, MultiFileSelect, RadioSelect } from './components/form';
 import { TextField } from '@/components/common';
 import { Storage } from '@aws-amplify/storage';
+import { Checkbox } from '@/components/common/Checkbox';
+import { DatePicker } from '@/components/form/DatePicker';
+import dayjs from 'dayjs';
 
 const rootStyle = css`
   display: flex;
@@ -31,7 +34,9 @@ interface FormInput {
   files: string[];
   sex: string;
   hobbies: string[];
+  married: boolean;
   smoking: string;
+  birth2: string;
 }
 
 const DEFAULT_VALUES: FormInput = {
@@ -43,7 +48,9 @@ const DEFAULT_VALUES: FormInput = {
   files: ['public/a.txt', 'public/b.txt'],
   sex: '男',
   hobbies: ['ゲーム', 'アウトドア'],
-  smoking: '吸わない'
+  married: true,
+  smoking: '吸わない',
+  birth2: '2000-01-03'
 };
 
 const schema = yup.object({
@@ -54,7 +61,9 @@ const schema = yup.object({
   file: yup.string().required(),
   files: yup.array().of(yup.string().required()).required().min(1),
   hobbies: yup.array().of(yup.string().required()).required().min(2),
-  smoking: yup.string().required()
+  married: yup.boolean().required(),
+  smoking: yup.string().required(),
+  birth2: yup.date().required()
 });
 
 function App() {
@@ -148,9 +157,21 @@ function App() {
                     </TableCell>
                   </TableRow>
                   <TableRow>
+                    <TableCell css={tableLabelStyle}>既婚</TableCell>
+                    <TableCell css={tableColumnStyle}>
+                      <Checkbox form={form} name={'married'} label="既婚" />
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
                     <TableCell css={tableLabelStyle}>タバコ</TableCell>
                     <TableCell css={tableColumnStyle}>
                       <DropdownSelect form={form} name="smoking" choices={['吸う', '吸わない']} />
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell css={tableLabelStyle}>日付</TableCell>
+                    <TableCell css={tableColumnStyle}>
+                      <DatePicker form={form} name="birth2" minDate={dayjs('2000-01-15')} />
                     </TableCell>
                   </TableRow>
                 </TableBody>

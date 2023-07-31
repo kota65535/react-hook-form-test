@@ -1,6 +1,6 @@
+import { ChangeEvent, useState, useRef, useEffect, FocusEvent } from 'react';
 import { Box, FormControl, FormControlLabel, FormHelperText, Radio, RadioGroup, TextField } from '@mui/material';
 import { Controller, FieldValues, FieldPath, UseFormReturn } from 'react-hook-form';
-import { ChangeEvent, useState } from 'react';
 
 type LabeledValue = {
   label: string;
@@ -17,16 +17,26 @@ interface Props<R extends FieldValues> {
 }
 
 export const RadioSelect = <R extends FieldValues>(props: Props<R>) => {
-  const { control, setValue } = props.form;
+  const { control, getValues, setValue } = props.form;
   const [enableFreeFormat, setEnableFreeFormat] = useState(false);
-  const handleClick = (event: ChangeEvent<HTMLInputElement>, value: string) => {
+  const [enableError, setEnableError] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>, value: string) => {
     if (value === props.freeFormatLabel) {
       setEnableFreeFormat(true);
-      setValue(props.name, '' as never, { shouldValidate: true });
+      setValue(props.name, '' as never);
     } else {
       setEnableFreeFormat(false);
     }
+    setEnableError(false);
   };
+
+  useEffect(() => {
+    if (enableFreeFormat) {
+      inputRef.current?.focus();
+    }
+  }, [enableFreeFormat]);
 
   return (
     <Controller
@@ -38,17 +48,36 @@ export const RadioSelect = <R extends FieldValues>(props: Props<R>) => {
         const isFreeFormValue = value
           ? !props.choices.some((c) => (c as string) === value || (c as LabeledValue).value === value)
           : false;
+        const handleTextFieldBlur = (e: FocusEvent<HTMLInputElement>) => {
+          const relatedTarget = e.nativeEvent.relatedTarget;
+          let enableError = true;
+          if (
+            (relatedTarget as HTMLInputElement)?.name === props.name ||
+            ((relatedTarget as HTMLLabelElement)?.control as HTMLInputElement)?.name === props.name
+          ) {
+            enableError = false;
+          }
+          setEnableError(enableError);
+          setValue(props.name, getValues(props.name), { shouldValidate: true });
+        };
         return (
-          <FormControl disabled={!!props.disabled} fullWidth error={fieldState.invalid}>
-            <RadioGroup row={props.row} value={value} onChange={handleClick}>
+          <FormControl disabled={!!props.disabled} fullWidth error={enableError && fieldState.invalid}>
+            <RadioGroup row={props.row} value={value} onChange={handleChange}>
               {props.choices.map((c) => {
                 if (c.constructor.name === 'String') {
                   c = c as string;
-                  return <FormControlLabel key={c} {...field} value={c} control={<Radio />} label={c} />;
+                  return <FormControlLabel key={c} {...field} value={c} control={<Radio />} label={c} tabIndex={0} />;
                 }
                 c = c as LabeledValue;
                 return (
-                  <FormControlLabel key={c.value} {...field} value={c.value} control={<Radio />} label={c.label} />
+                  <FormControlLabel
+                    key={c.value}
+                    {...field}
+                    value={c.value}
+                    control={<Radio />}
+                    label={c.label}
+                    tabIndex={0}
+                  />
                 );
               })}
               {props.freeFormatLabel && (
@@ -62,14 +91,15 @@ export const RadioSelect = <R extends FieldValues>(props: Props<R>) => {
                   />
                   <TextField
                     {...field}
-                    value={value}
-                    error={!!fieldState.error}
-                    sx={{ opacity: enableFreeFormat || isFreeFormValue ? 1 : 0 }}
+                    inputRef={inputRef}
+                    onBlur={handleTextFieldBlur}
+                    error={enableError && !!fieldState.error}
+                    disabled={!(enableFreeFormat || isFreeFormValue)}
                   />
                 </Box>
               )}
             </RadioGroup>
-            <FormHelperText>{fieldState.error?.message}</FormHelperText>
+            <FormHelperText>{enableError && fieldState.error?.message}</FormHelperText>
           </FormControl>
         );
       }}
