@@ -32,7 +32,7 @@ interface FormInput {
   birth: string;
   file: string;
   files: string[];
-  sex: string;
+  sex?: string;
   hobbies: string[];
   married: boolean;
   smoking: string;
@@ -46,7 +46,7 @@ const DEFAULT_VALUES: FormInput = {
   birth: '2000-01-02',
   file: 'public/a.txt',
   files: ['public/a.txt', 'public/b.txt'],
-  sex: '男',
+  sex: '',
   hobbies: ['ゲーム', 'アウトドア'],
   married: true,
   smoking: '吸わない',
@@ -55,21 +55,25 @@ const DEFAULT_VALUES: FormInput = {
 
 const schema = yup.object({
   name: yup.string().required(),
-  age: yup.string().required(),
+  age: yup
+    .number()
+    .transform((v, o) => (o === '' ? null : v))
+    .required(),
   email: yup.string().email().required(),
   birth: yup.string().required(),
   file: yup.string().required(),
   files: yup.array().of(yup.string().required()).required().min(1),
+  sex: yup.string(),
   hobbies: yup.array().of(yup.string().required()).required().min(2),
   married: yup.boolean().required(),
   smoking: yup.string().required(),
-  birth2: yup.date().required()
+  birth2: yup.string().required()
 });
 
 function App() {
   const form = useForm<FormInput>({
     mode: 'onChange',
-    resolver: yupResolver(schema),
+    resolver: yupResolver<FormInput>(schema),
     defaultValues: DEFAULT_VALUES
   });
 
