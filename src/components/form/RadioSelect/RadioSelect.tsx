@@ -1,32 +1,33 @@
 import { ChangeEvent, useState, useRef, useEffect, FocusEvent } from 'react';
 import { Box, FormControl, FormControlLabel, FormHelperText, Radio, RadioGroup, TextField } from '@mui/material';
-import { Controller, FieldValues, FieldPath, UseFormReturn } from 'react-hook-form';
+import { Controller, FieldValues, FieldPath, UseFormReturn, PathValue, Path } from 'react-hook-form';
 
 type LabeledValue = {
   label: string;
   value: string;
 };
 
-interface Props<R extends FieldValues> {
+type Props<R extends FieldValues> = {
   form: UseFormReturn<R>;
   name: FieldPath<R>;
-  choices: string[] | LabeledValue[];
+  options: string[] | LabeledValue[];
   disabled?: boolean;
   row?: boolean;
   freeFormatLabel?: string;
-}
+};
 
 export const RadioSelect = <R extends FieldValues>(props: Props<R>) => {
-  const { control, getValues, setValue } = props.form;
+  const { control, resetField, setValue } = props.form;
   const [enableFreeFormat, setEnableFreeFormat] = useState(false);
   const [enableError, setEnableError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>, value: string) => {
     if (value === props.freeFormatLabel) {
+      resetField(props.name);
       setEnableFreeFormat(true);
-      setValue(props.name, '' as never);
     } else {
+      setValue(props.name, value as PathValue<R, Path<R>>);
       setEnableFreeFormat(false);
     }
     setEnableError(false);
@@ -42,11 +43,10 @@ export const RadioSelect = <R extends FieldValues>(props: Props<R>) => {
     <Controller
       control={control}
       name={props.name}
-      defaultValue={'' as never}
       render={({ field, fieldState }) => {
         const value = field.value;
-        const isFreeFormValue = value
-          ? !props.choices.some((c) => (c as string) === value || (c as LabeledValue).value === value)
+        const isFreeFormatValue = value
+          ? !props.options.some((c) => (c as string) === value || (c as LabeledValue).value === value)
           : false;
         const handleTextFieldBlur = (e: FocusEvent<HTMLInputElement>) => {
           const relatedTarget = e.nativeEvent.relatedTarget;
@@ -58,12 +58,12 @@ export const RadioSelect = <R extends FieldValues>(props: Props<R>) => {
             enableError = false;
           }
           setEnableError(enableError);
-          setValue(props.name, getValues(props.name), { shouldValidate: true });
+          setValue(props.name, value, { shouldValidate: true });
         };
         return (
           <FormControl disabled={!!props.disabled} fullWidth error={enableError && fieldState.invalid}>
             <RadioGroup row={props.row} value={value} onChange={handleChange}>
-              {props.choices.map((c) => {
+              {props.options.map((c) => {
                 if (c.constructor.name === 'String') {
                   c = c as string;
                   return <FormControlLabel key={c} {...field} value={c} control={<Radio />} label={c} tabIndex={0} />;
@@ -85,17 +85,17 @@ export const RadioSelect = <R extends FieldValues>(props: Props<R>) => {
                   <FormControlLabel
                     key={props.freeFormatLabel}
                     {...field}
-                    control={<Radio checked={enableFreeFormat || isFreeFormValue} />}
+                    control={<Radio checked={enableFreeFormat || isFreeFormatValue} />}
                     value={props.freeFormatLabel}
                     label={props.freeFormatLabel}
                   />
                   <TextField
                     {...field}
-                    value={isFreeFormValue ? field.value : ''}
+                    value={isFreeFormatValue ? field.value : ''}
                     inputRef={inputRef}
                     onBlur={handleTextFieldBlur}
                     error={enableError && !!fieldState.error}
-                    disabled={!(enableFreeFormat || isFreeFormValue)}
+                    disabled={!(enableFreeFormat || isFreeFormatValue)}
                   />
                 </Box>
               )}

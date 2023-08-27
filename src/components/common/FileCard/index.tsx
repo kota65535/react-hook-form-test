@@ -5,7 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 interface Props {
   url: string;
   name?: string;
-  onClick: (name: string) => void;
+  onDelete: (name: string) => void;
 }
 
 export const FileCard = (props: Props) => {
@@ -18,7 +18,7 @@ export const FileCard = (props: Props) => {
   const filename = props.name || pathname.split('/').pop() || pathname;
 
   const onClick = () => {
-    props.onClick(filename);
+    props.onDelete(filename);
   };
 
   return (

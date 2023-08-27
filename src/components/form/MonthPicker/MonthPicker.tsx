@@ -1,5 +1,5 @@
 import { Controller, FieldPath, FieldValues, Path, PathValue, UseFormReturn } from 'react-hook-form';
-import { DatePicker as MuiDatePicker, DatePickerProps as MuiDatePickerProps, PickersDay } from '@mui/x-date-pickers';
+import { DatePicker as MuiDatePicker, DatePickerProps as MuiDatePickerProps } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
 import { Box, FormHelperText } from '@mui/material';
 
@@ -8,7 +8,7 @@ type Props<R extends FieldValues> = MuiDatePickerProps<dayjs.Dayjs> & {
   name: FieldPath<R>;
 };
 
-export const DatePicker = <R extends FieldValues>(props: Props<R>) => {
+export const MonthPicker = <R extends FieldValues>(props: Props<R>) => {
   const {
     form: { control, setValue },
     name,
@@ -17,7 +17,7 @@ export const DatePicker = <R extends FieldValues>(props: Props<R>) => {
 
   const handleChange = (value: dayjs.Dayjs | null) => {
     if (value) {
-      setValue(name, value.format('YYYY-MM-DD') as PathValue<R, Path<R>>);
+      setValue(name, value.format('YYYY-MM') as PathValue<R, Path<R>>);
     }
   };
 
@@ -31,22 +31,9 @@ export const DatePicker = <R extends FieldValues>(props: Props<R>) => {
           <Box>
             <MuiDatePicker
               value={value ? dayjs(value) : null}
-              format={'YYYY/MM/DD'}
+              format={'YYYY/MM'}
               onChange={handleChange}
-              slots={{
-                day: (props1) => {
-                  const day = props1.day;
-                  const weekNumber = day.format('d');
-                  switch (weekNumber) {
-                    case '0':
-                      return <PickersDay {...props1} sx={{ color: 'red' }} />;
-                    case '6':
-                      return <PickersDay {...props1} sx={{ color: 'blue' }} />;
-                    default:
-                      return <PickersDay {...props1} />;
-                  }
-                }
-              }}
+              views={['year', 'month']}
               {...rest}
             />
             <FormHelperText>{fieldState.error?.message as string}</FormHelperText>

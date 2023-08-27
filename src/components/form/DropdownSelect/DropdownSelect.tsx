@@ -1,33 +1,36 @@
 import { FormControl, FormHelperText, InputLabel, MenuItem, Select } from '@mui/material';
 import { Controller, FieldPath, FieldValues, UseFormReturn } from 'react-hook-form';
 import { ReactElement } from 'react';
+import { SelectProps } from '@mui/material/Select/Select';
 
 type LabeledValue = {
   label: string | ReactElement;
   value: string;
 };
 
-interface Props<R extends FieldValues> {
+interface Props<R extends FieldValues> extends SelectProps {
   form: UseFormReturn<R>;
   name: FieldPath<R>;
-  choices: string[] | LabeledValue[];
+  options: string[] | LabeledValue[];
   label?: string;
   disabled?: boolean;
 }
 
 export const DropdownSelect = <R extends FieldValues>(props: Props<R>) => {
-  const { control } = props.form;
+  const { form, name, options, label, disabled, ...rest } = props;
+  const { control } = form;
+
   return (
     <Controller
       control={control}
-      name={props.name}
+      name={name}
       render={({ field, fieldState }) => {
         const value = field.value || '';
         return (
-          <FormControl disabled={!!props.disabled} fullWidth error={fieldState.invalid}>
-            <InputLabel id={props.name}>{props.label}</InputLabel>
-            <Select labelId={props.name} label={props.label} autoWidth {...field} value={value}>
-              {props.choices.map((c) => {
+          <FormControl disabled={!!disabled} error={fieldState.invalid} fullWidth>
+            <InputLabel id={name}>{label}</InputLabel>
+            <Select labelId={name} label={label} {...field} value={value} {...rest}>
+              {options.map((c) => {
                 let value, label;
                 if (c.constructor.name === 'String') {
                   value = label = c as string;

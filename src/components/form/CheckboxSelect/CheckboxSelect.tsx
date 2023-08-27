@@ -1,5 +1,5 @@
-import { Checkbox, FormControl, FormControlLabel, FormHelperText } from '@mui/material';
-import { Controller, FieldValues, UseFormReturn, FieldPath } from 'react-hook-form';
+import { Checkbox, FormControl, FormControlLabel, FormHelperText, Stack } from '@mui/material';
+import { Controller, FieldValues, UseFormReturn, FieldPath, PathValue, Path } from 'react-hook-form';
 import { ChangeEvent } from 'react';
 
 type LabeledValue = {
@@ -7,13 +7,12 @@ type LabeledValue = {
   value: string;
 };
 
-interface Props<R extends FieldValues> {
+type Props<R extends FieldValues> = {
   form: UseFormReturn<R>;
   name: FieldPath<R>;
-  choices: string[] | LabeledValue[];
+  options: string[] | LabeledValue[];
   disabled?: boolean;
-  row?: boolean;
-}
+};
 
 export const CheckboxSelect = <R extends FieldValues>(props: Props<R>) => {
   const { control, setValue } = props.form;
@@ -22,7 +21,7 @@ export const CheckboxSelect = <R extends FieldValues>(props: Props<R>) => {
     <Controller
       control={control}
       name={props.name}
-      defaultValue={[] as never}
+      defaultValue={[] as PathValue<R, Path<R>>}
       render={({ field, fieldState }) => {
         const formValue = (field.value || []) as string[];
 
@@ -33,27 +32,33 @@ export const CheckboxSelect = <R extends FieldValues>(props: Props<R>) => {
           } else {
             newValue = formValue.filter((v) => v !== label);
           }
-          setValue(props.name, newValue as never, { shouldValidate: true });
+          setValue(props.name, newValue as PathValue<R, Path<R>>, {
+            shouldValidate: true,
+            shouldDirty: true,
+            shouldTouch: true
+          });
         };
 
         return (
-          <FormControl disabled={!!props.disabled} fullWidth error={fieldState.invalid}>
-            {props.choices.map((c) => {
-              let value, label: string;
-              if (c.constructor.name === 'String') {
-                value = label = c as string;
-              } else {
-                value = (c as LabeledValue).value;
-                label = (c as LabeledValue).label;
-              }
-              return (
-                <FormControlLabel
-                  key={value}
-                  label={label}
-                  control={<Checkbox {...field} onChange={onChange(value)} checked={formValue.includes(value)} />}
-                />
-              );
-            })}
+          <FormControl disabled={!!props.disabled} error={fieldState.invalid}>
+            <Stack direction="row">
+              {props.options.map((c) => {
+                let value, label: string;
+                if (c.constructor.name === 'String') {
+                  value = label = c as string;
+                } else {
+                  value = (c as LabeledValue).value;
+                  label = (c as LabeledValue).label;
+                }
+                return (
+                  <FormControlLabel
+                    key={value}
+                    label={label}
+                    control={<Checkbox {...field} onChange={onChange(value)} checked={formValue.includes(value)} />}
+                  />
+                );
+              })}
+            </Stack>
             <FormHelperText>{fieldState.error?.message}</FormHelperText>
           </FormControl>
         );

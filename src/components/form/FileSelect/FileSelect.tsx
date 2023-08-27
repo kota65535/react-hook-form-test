@@ -1,8 +1,12 @@
 import { Box, Button, FormHelperText, CircularProgress } from '@mui/material';
 import FileIcon from '@mui/icons-material/InsertDriveFile';
-import { FieldValues, UseFormReturn, FieldPath } from 'react-hook-form';
+import { FieldValues, UseFormReturn, FieldPath, Controller, PathValue, Path } from 'react-hook-form';
 import { FileCard } from '@/components/common';
-import { ChangeEvent, ReactNode, useState } from 'react';
+import { ChangeEvent, ReactNode, useRef, useState } from 'react';
+
+const DEFAULT_TEXT = 'Select';
+const DEFAULT_ICON = <FileIcon />;
+const DEFAULT_ACCEPT = '*/*';
 
 interface Props<R extends FieldValues> {
   form: UseFormReturn<R>;
@@ -12,18 +16,13 @@ interface Props<R extends FieldValues> {
   accept?: string;
   baseUrl?: string;
   upload: (file: File) => Promise<string>;
+  delete: (key: string) => Promise<void>;
 }
 
 export const FileSelect = <R extends FieldValues>(props: Props<R>) => {
-  const {
-    register,
-    watch,
-    setValue,
-    formState: { errors }
-  } = props.form;
-
-  const formValue = watch(props.name);
+  const { control, setValue } = props.form;
   const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const onChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,33 +30,55 @@ export const FileSelect = <R extends FieldValues>(props: Props<R>) => {
       return;
     }
     setUploading(true);
-    let pathOrUrl = '';
+    let key = '';
     try {
-      pathOrUrl = await props.upload(file);
+      key = await props.upload(file);
     } finally {
       setUploading(false);
     }
-    setValue(props.name, pathOrUrl as never, { shouldValidate: true });
+    setValue(props.name, key as PathValue<R, Path<R>>, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true
+    });
   };
-  const onDelete = () => {
-    setValue(props.name, '' as never, { shouldValidate: true });
+  const onDelete = (value: string) => () => {
+    setValue(props.name, '' as PathValue<R, Path<R>>, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true
+    });
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
+    props.delete(value);
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', height: '56px', alignItems: 'center' }}>
-        <Button
-          component="label"
-          disabled={uploading}
-          startIcon={uploading ? <CircularProgress size={20} /> : props.icon ?? <FileIcon />}
-        >
-          {props.text ?? '選択'}
-          <input onChange={onChange} accept={props.accept ?? '*/*'} type="file" hidden />
-        </Button>
-        <input {...register(props.name)} accept="*/*" hidden />
-      </Box>
-      {formValue && <FileCard url={props.baseUrl ? `${props.baseUrl}/${formValue}` : formValue} onClick={onDelete} />}
-      <FormHelperText error={props.name in errors}>{errors[props.name]?.message as never}</FormHelperText>
-    </Box>
+    <Controller
+      control={control}
+      name={props.name}
+      render={({ field, fieldState }) => {
+        const value = field.value;
+        const url = props.baseUrl ? [props.baseUrl, value].join('/') : value;
+        return (
+          <Box>
+            {value ? ( //
+              <FileCard url={url} onDelete={onDelete(value)} />
+            ) : (
+              <Button
+                component="label"
+                disabled={uploading}
+                startIcon={uploading ? <CircularProgress size={20} /> : props.icon ?? DEFAULT_ICON}
+              >
+                {props.text ?? DEFAULT_TEXT}
+                <input type="file" accept={props.accept ?? DEFAULT_ACCEPT} ref={inputRef} onChange={onChange} hidden />
+              </Button>
+            )}
+            <FormHelperText error={fieldState.invalid}>{fieldState.error?.message as string}</FormHelperText>
+          </Box>
+        );
+      }}
+    />
   );
 };

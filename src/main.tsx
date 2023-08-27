@@ -5,6 +5,7 @@ import { Amplify } from '@aws-amplify/core';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import 'dayjs/locale/ja';
+import { MuiThemeProvider } from '@/styles';
 
 const config = {
   Auth: {
@@ -26,7 +27,9 @@ Amplify.configure(config);
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={'ja'} dateFormats={{ monthAndYear: 'YYYY年MM月' }}>
-      <App />
+      <MuiThemeProvider>
+        <App />
+      </MuiThemeProvider>
     </LocalizationProvider>
   </React.StrictMode>
 );
